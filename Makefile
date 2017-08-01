@@ -1,25 +1,16 @@
 
-repository := openvpn_exporter
-git_rev := $(shell git describe --always --tags)
-img := $(repository):$(git_rev)
-temp_container := openvpn_exporter-tmp-$(git_rev)
+IMAGE_NAME := "openvpn_exporter"
+IMAGE_TAG := $(shell git describe --always --tags)
 
-openvpn_exporter: docker_image clean_temp_container
-	docker run --rm -d -v "$(CURDIR):/target" --name "$(temp_container)" "$(img)" -h
-	docker cp "$(temp_container):/bin/openvpn_exporter" .
+static: deps
+	CGO_ENABLED=0 go build -ldflags '-s' openvpn_exporter.go
 
-docker_image: openvpn_exporter.go Dockerfile
-	docker build -t "$(img)" .
+deps:
+	go get -v
 
-clean: clean_temp_container
-	rm -f openvpn_exporter
-	if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "$(img)"; then \
-		docker rmi "$(img)"; \
-	fi
+docker: static
+	docker build -t "$(IMAGE_NAME):$(IMAGE_TAG)" .
+	docker tag "$(IMAGE_NAME):$(IMAGE_TAG)" "$(IMAGE_NAME):latest"
 
-clean_temp_container:
-	if docker ps -a --format '{{.Names}}' | grep -q "$(temp_container)"; then \
-		docker rm -f "$(temp_container)"; \
-	fi
-
-.PHONY: clean docker_image
+docker-push: docker
+	docker push "$(IMAGE_NAME):$(IMAGE_TAG)"
