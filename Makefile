@@ -8,7 +8,14 @@ static: deps
 deps:
 	go get -v
 
-docker: static
+build-in-docker:
+	docker run --rm \
+		-v $(PWD):/go/src/app \
+		-w /go/src/app \
+		golang:1.8 \
+		make static
+
+docker:
 	docker build -t "$(IMAGE_NAME):$(IMAGE_TAG)" .
 	docker tag "$(IMAGE_NAME):$(IMAGE_TAG)" "$(IMAGE_NAME):latest"
 
