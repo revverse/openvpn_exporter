@@ -198,11 +198,13 @@ func CollectServerStatusFromReader(statusPath string, file io.Reader, ch chan<- 
 				statusPath)
 		} else if fields[0] == "TITLE" && len(fields) == 2 {
 			// OpenVPN version number.
-		} else if fields[0] == "CLIENT_LIST"{
-			numberConnectedClient ++
 		} else if header, ok := openvpnServerHeaders[fields[0]]; ok {
+		   if fields[0] == "CLIENT_LIST" {
+			   numberConnectedClient ++
+		   }
 			// Entry that depends on a preceding HEADERS directive.
 			columnNames, ok := headersFound[fields[0]]
+			log.Printf("column ",openvpnServerHeaders[fields[0]]," ")
 			if !ok {
 				return fmt.Errorf("%s should be preceded by HEADERS", fields[0])
 			}
@@ -217,12 +219,14 @@ func CollectServerStatusFromReader(statusPath string, file io.Reader, ch chan<- 
 			}
 			for i, column := range columnNames {
 				columnValues[column] = fields[i+1]
+				log.Printf("column ",column," ")
 			}
 
 			// Extract columns that should act as entry labels.
 			labels := []string{statusPath}
 			for _, column := range header.LabelColumns {
 				labels = append(labels, columnValues[column])
+				log.Printf("labels ",labels," ")
 			}
 
 			// Export relevant columns as individual metrics.
