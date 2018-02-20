@@ -55,7 +55,7 @@ var (
 	// Metrics specific to OpenVPN servers.
 	openvpnConnectedClientsDesc = prometheus.NewDesc(
 		prometheus.BuildFQName("openvpn", "", "openvpn_server_connected_clients"),
-		"Number Of Connected Clients", nil, nil)
+		"Number Of Connected Clients", []string{"status_path"}, nil)
 
 	openvpnServerHeaders = map[string]OpenvpnServerHeader{
 		"CLIENT_LIST": {
@@ -243,12 +243,15 @@ func CollectServerStatusFromReader(statusPath string, file io.Reader, ch chan<- 
 		} else {
 			return fmt.Errorf("unsupported key: %q", fields[0])
 		}
-	}
+		fields = fields[:0]
+		}
+
 	// add the number of connected client
 	ch <- prometheus.MustNewConstMetric(
 		openvpnConnectedClientsDesc,
 		prometheus.GaugeValue,
-		float64(numberConnectedClient))
+		float64(numberConnectedClient),
+		statusPath)
 	return scanner.Err()
 }
 
