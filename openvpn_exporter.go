@@ -243,8 +243,7 @@ func CollectServerStatusFromReader(statusPath string, file io.Reader, ch chan<- 
 		} else {
 			return fmt.Errorf("unsupported key: %q", fields[0])
 		}
-		fields = fields[:0]
-		}
+	}
 
 	// add the number of connected client
 	ch <- prometheus.MustNewConstMetric(
